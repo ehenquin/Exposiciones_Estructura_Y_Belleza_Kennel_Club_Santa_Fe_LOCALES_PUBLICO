@@ -164,27 +164,58 @@
 
         if (!idevento || !idjuez) return;
 
-        let datos = [];
-
-        if (tipo === "razas") {
-          datos = DATA_GLOBAL.razas;
-        } else {
-          datos = DATA_GLOBAL.bis;
-        }
+        let datos = tipo === "razas" ? DATA_GLOBAL.razas : DATA_GLOBAL.bis;
 
         const filtrados = datos.filter(
           (r) => r.IDEvento === idevento && r.IDJuez === idjuez,
         );
 
+        if (filtrados.length === 0) {
+          cont.innerHTML = "<p>No hay resultados cargados.</p>";
+          return;
+        }
+
+        // Agrupar por raza (si existe)
+        const grupos = {};
+
         filtrados.forEach((r) => {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-      <strong>#${r.Puesto || "-"}</strong>
-      ${r.IDInscripcion || ""}
-      ${r.Titulo_Ganado || ""}
-    `;
-          cont.appendChild(div);
+          const raza = r.Raza || "Sin Raza";
+          if (!grupos[raza]) grupos[raza] = [];
+          grupos[raza].push(r);
+        });
+
+        Object.keys(grupos).forEach((raza) => {
+          const tituloRaza = document.createElement("h3");
+          tituloRaza.style.marginTop = "30px";
+          tituloRaza.textContent = raza;
+          cont.appendChild(tituloRaza);
+
+          grupos[raza].forEach((r) => {
+            const numero = (r.IDInscripcion || "").split("-").pop();
+            const puestoTexto = r.Puesto ? `#${r.Puesto}° ` : "";
+            const titulo = r.Titulo_Ganado || "";
+            const nombre = r.observaciones || "";
+
+            const div = document.createElement("div");
+            div.className = "card";
+
+            div.innerHTML = `
+        <div style="font-size:16px; font-weight:bold;">
+          Catálogo ${numero}
+        </div>
+
+        <div style="font-size:13px; color:#ff9f43;">
+          Cat. ${numero}
+        </div>
+
+        <div style="margin-top:8px; font-weight:bold;">
+          ${puestoTexto}${titulo}
+          ${nombre ? " - " + nombre : ""}
+        </div>
+      `;
+
+            cont.appendChild(div);
+          });
         });
       }
 
