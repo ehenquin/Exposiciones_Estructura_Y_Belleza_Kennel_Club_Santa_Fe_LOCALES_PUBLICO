@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Planilla Electrónica - Competencias LOCALES</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #0c0c0f;
+        color: #fff;
+      }
+      header {
+        text-align: center;
+        padding: 30px 10px 10px;
+      }
+      header h1 {
+        margin: 10px 0 5px;
+        font-size: 22px;
+      }
+      header small {
+        color: #ff9f43;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #111115;
+        border: 1px solid #aa2e2e;
+        border-radius: 16px;
+      }
+      label {
+        display: block;
+        margin: 15px 0 5px;
+        color: #ff9f43;
+        font-weight: bold;
+      }
+      select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #333;
+        background: #e5e1dc;
+        font-size: 15px;
+      }
+      select:disabled {
+        background: #777;
+      }
+      .buttons {
+        text-align: center;
+        margin-top: 30px;
+      }
+      button {
+        padding: 15px 30px;
+        margin: 10px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #b33939, #e58e26);
+        color: #fff;
+        font-weight: bold;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .resultados {
+        margin-top: 40px;
+      }
+      .card {
+        background: #18181d;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #ff9f43;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Planilla Electrónica - Competencias LOCALES</h1>
+      <small>Desarrollada por Dr. Eduardo R. Henquín</small>
+    </header>
+
+    <div class="container">
+      <label>COMPETENCIA</label>
+      <select id="selectorEvento"></select>
+
+      <label>JUEZ / PISTA</label>
+      <select id="selectorJuez" disabled></select>
+
+      <div class="buttons">
+        <button onclick="cargarResultados('razas')">Resultados Razas</button>
+        <button onclick="cargarResultados('bis')">Finales BIS</button>
+      </div>
+
+      <div class="resultados" id="contenedorResultados"></div>
+    </div>
+
+    <script>
+      const API =
+        "https://script.google.com/macros/s/AKfycbyCLSpeBpjxzfj5IWl6FO8G6jB_ypHkAdiGqwOLKbnNiTCiRTaH-nQ0twq-qbqQWaIF/exec";
+
+      let DATA_GLOBAL = null;
+
+      // Cargar datos públicos
+      async function cargarDatosPublicos() {
+        const res = await fetch(API + "?action=publicResults");
+        const data = await res.json();
+        if (!data.ok) return;
+        DATA_GLOBAL = data;
+        poblarEventos();
+      }
+
+      // Poblar selector de eventos
+      function poblarEventos() {
+        const sel = document.getElementById("selectorEvento");
+        sel.innerHTML = "<option value=''>Seleccionar competencia</option>";
+
+        DATA_GLOBAL.eventos.forEach((ev) => {
+          const opt = document.createElement("option");
+          opt.value = ev.IDEvento;
+          opt.textContent = ev.NombreEvento;
+          sel.appendChild(opt);
+        });
+      }
+
+      // Cuando cambia evento
+      document
+        .getElementById("selectorEvento")
+        .addEventListener("change", function () {
+          const idevento = this.value;
+          const selJ = document.getElementById("selectorJuez");
+          selJ.innerHTML = "";
+          selJ.disabled = true;
+          if (!idevento) return;
+
+          const jueces = DATA_GLOBAL.razas
+            .filter((r) => r.IDEvento === idevento)
+            .map((r) => r.IDJuez)
+            .filter((v, i, a) => a.indexOf(v) === i);
+
+          selJ.innerHTML = "<option value=''>Seleccionar juez/pista</option>";
+
+          jueces.forEach((j) => {
+            const opt = document.createElement("option");
+            opt.value = j;
+            opt.textContent = j;
+            selJ.appendChild(opt);
+          });
+
+          selJ.disabled = false;
+        });
+
+      // Cargar resultados
+      function cargarResultados(tipo) {
+        const idevento = document.getElementById("selectorEvento").value;
+        const idjuez = document.getElementById("selectorJuez").value;
+        const cont = document.getElementById("contenedorResultados");
+
+        cont.innerHTML = "";
+
+        if (!idevento || !idjuez) return;
+
+        let datos = [];
+
+        if (tipo === "razas") {
+          datos = DATA_GLOBAL.razas;
+        } else {
+          datos = DATA_GLOBAL.bis;
+        }
+
+        const filtrados = datos.filter(
+          (r) => r.IDEvento === idevento && r.IDJuez === idjuez,
+        );
+
+        filtrados.forEach((r) => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+      <strong>#${r.Puesto || "-"}</strong>
+      ${r.IDInscripcion || ""}
+      ${r.Titulo_Ganado || ""}
+    `;
+          cont.appendChild(div);
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", cargarDatosPublicos);
+    </script>
+  </body>
+</html>
