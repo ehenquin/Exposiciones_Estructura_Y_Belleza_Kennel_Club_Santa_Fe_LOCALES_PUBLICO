@@ -266,3 +266,220 @@ button:hover {
 .resultado-linea:last-child {
     border-bottom: none;
 }
+
+.catalogos-espera {
+    max-width: 720px;
+    margin: 42px auto 0;
+    padding: 34px 24px;
+    text-align: center;
+    background: linear-gradient(180deg, #1f1e27, #16161d);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 24px 55px rgba(0, 0, 0, 0.32);
+}
+
+.catalogos-espera h2 {
+    margin: 0 0 18px;
+    color: #ffbd78;
+}
+
+.catalogos-espera p {
+    margin: 0 0 8px;
+    color: #e9e4df;
+}
+
+.catalogos-espera strong {
+    display: block;
+    color: #ffd54a;
+    font-size: 1.08rem;
+}
+
+.catalogos-espera__label {
+    margin-top: 28px;
+    color: #ff9f43;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.catalogos-countdown {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.catalogos-countdown div {
+    padding: 16px 10px;
+    background: #111118;
+    border: 1px solid #34313a;
+    border-radius: 12px;
+}
+
+.catalogos-countdown span {
+    display: block;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.catalogos-countdown small {
+    display: block;
+    margin-top: 7px;
+    color: #ffbd78;
+}
+
+.catalogos-panel {
+    margin-top: 32px;
+}
+
+.catalogos-filtros {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.catalogos-filtros label {
+    margin-top: 0;
+}
+
+.catalogos-filtros select {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 8px;
+    padding: 0 14px;
+    border: 1px solid #34313a;
+    border-radius: 12px;
+    background: #181820;
+    color: #fff;
+    font: inherit;
+    font-weight: 650;
+}
+
+.catalogos-tabla {
+    overflow: hidden;
+    border: 1px solid #2a2a33;
+    border-radius: 14px;
+    background: #181820;
+}
+
+.catalogos-tabla__head,
+.catalogos-tabla__row {
+    display: grid;
+    grid-template-columns: 110px 90px 1.35fr 1fr 100px 1.25fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.catalogos-tabla__head {
+    padding: 14px 16px;
+    background: #24232c;
+    color: #ff9f43;
+    font-weight: 800;
+}
+
+.catalogos-tabla__row {
+    padding: 15px 16px;
+    border-top: 1px solid #2a2a33;
+}
+
+.catalogos-tabla__row div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.catalogos-vacio,
+.catalogos-sin-resultados {
+    margin-top: 32px;
+    padding: 24px;
+    background: #181820;
+    border: 1px solid #2a2a33;
+    border-radius: 14px;
+    color: #e9e4df;
+}
+
+.catalogos-vacio h3 {
+    margin: 0 0 10px;
+    color: #ff9f43;
+}
+
+.catalogos-vacio p {
+    margin: 0;
+}
+
+@media (max-width: 780px) {
+    .catalogos-countdown {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .catalogos-filtros {
+        grid-template-columns: 1fr;
+    }
+
+    .catalogos-tabla {
+        border: 0;
+        background: transparent;
+    }
+
+    .catalogos-tabla__head {
+        display: none;
+    }
+
+    .catalogos-tabla__row {
+        display: block;
+        margin-bottom: 14px;
+        padding: 16px;
+        border: 1px solid #2a2a33;
+        border-radius: 14px;
+        background: #181820;
+    }
+
+    .catalogos-tabla__row div {
+        display: grid;
+        grid-template-columns: 118px 1fr;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid #2a2a33;
+    }
+
+    .catalogos-tabla__row div:last-child {
+        border-bottom: 0;
+    }
+
+    .catalogos-tabla__row div::before {
+        content: attr(data-label);
+        color: #ff9f43;
+        font-weight: 800;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        margin: 18px 10px;
+        padding: 20px 14px;
+        border-radius: 14px;
+    }
+
+    button {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .catalogos-espera {
+        padding: 28px 14px;
+    }
+
+    .catalogos-countdown {
+        gap: 8px;
+    }
+
+    .catalogos-countdown span {
+        font-size: 1.65rem;
+    }
+
+    .catalogos-tabla__row div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
