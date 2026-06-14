@@ -493,7 +493,10 @@ function renderCatalogosBloqueados() {
   `;
 
   actualizarCountdownCatalogos();
-  catalogosCountdownTimer = window.setInterval(actualizarCountdownCatalogos, 1000);
+  catalogosCountdownTimer = window.setInterval(
+    actualizarCountdownCatalogos,
+    1000,
+  );
 }
 
 function actualizarCountdownCatalogos() {
@@ -566,7 +569,10 @@ function renderCatalogosPerrosInscriptos() {
           <select id="catalogosFiltroGrupo">
             <option value="">Todos los grupos</option>
             ${grupos
-              .map((grupo) => `<option value="${escapeHtmlCatalogos(grupo)}">${escapeHtmlCatalogos(grupo)}</option>`)
+              .map(
+                (grupo) =>
+                  `<option value="${escapeHtmlCatalogos(grupo)}">${escapeHtmlCatalogos(grupo)}</option>`,
+              )
               .join("")}
           </select>
         </label>
@@ -575,7 +581,10 @@ function renderCatalogosPerrosInscriptos() {
           <select id="catalogosFiltroRaza">
             <option value="">Todas las razas</option>
             ${razas
-              .map((raza) => `<option value="${escapeHtmlCatalogos(raza)}">${escapeHtmlCatalogos(raza)}</option>`)
+              .map(
+                (raza) =>
+                  `<option value="${escapeHtmlCatalogos(raza)}">${escapeHtmlCatalogos(raza)}</option>`,
+              )
               .join("")}
           </select>
         </label>
@@ -607,7 +616,8 @@ function renderCatalogosListado(perros) {
 
   const filtrados = perros.filter((perro) => {
     const coincideGrupo =
-      !catalogosEstadoActual.grupo || perro.grupo === catalogosEstadoActual.grupo;
+      !catalogosEstadoActual.grupo ||
+      perro.grupo === catalogosEstadoActual.grupo;
     const coincideRaza =
       !catalogosEstadoActual.raza || perro.raza === catalogosEstadoActual.raza;
     return coincideGrupo && coincideRaza;
@@ -649,8 +659,6 @@ function renderCatalogosListado(perros) {
 function obtenerDatosCatalogosPerros() {
   if (!DATA_GLOBAL) return [];
 
-  // El endpoint publico debe devolver una lista de perros inscriptos con:
-  // NumeroCatalogo, Grupo/IDGrupo, NombreRaza, Categoria/IDCategoria, Sexo/IDSexo y Observaciones.
   const origen =
     DATA_GLOBAL.Catalogo_Perros_Inscriptos ||
     DATA_GLOBAL.catalogoPerrosInscriptos ||
@@ -664,13 +672,57 @@ function obtenerDatosCatalogosPerros() {
     return [];
   }
 
+  const ideventoSeleccionado =
+    document.getElementById("selectorEvento")?.value || "";
+
   return origen
-    .map(normalizarPerroCatalogo)
+    .filter((perro) => {
+      if (!ideventoSeleccionado) return true;
+
+      return (
+        String(perro.IDEvento || "").trim() ===
+        String(ideventoSeleccionado).trim()
+      );
+    })
+    .map((perro) => ({
+      IDEvento: perro.IDEvento || "",
+
+      numero: valorCatalogo(perro, [
+        "NumeroCatalogo",
+        "NroCatalogo",
+        "Numero",
+        "Catalogo",
+        "numeroCatalogo",
+      ]),
+
+      grupo: valorCatalogo(perro, ["Grupo", "IDGrupo", "NombreGrupo", "grupo"]),
+
+      raza: valorCatalogo(perro, ["Raza", "NombreRaza", "raza"]),
+
+      categoria: valorCatalogo(perro, [
+        "NombreCategoria",
+        "Categoria",
+        "IDCategoria",
+        "categoria",
+      ]),
+
+      sexo: textoSexoCatalogos(
+        valorCatalogo(perro, ["Sexo", "IDSexo", "sexo"]),
+      ),
+
+      observaciones: valorCatalogo(perro, [
+        "Observaciones",
+        "Observacion",
+        "observaciones",
+      ]),
+    }))
     .filter((perro) => perro.numero || perro.grupo || perro.raza);
 }
 
 function normalizarPerroCatalogo(perro) {
   return {
+    IDEvento: valorCatalogo(perro, ["IDEvento", "Evento", "evento"]),
+
     numero: valorCatalogo(perro, [
       "NumeroCatalogo",
       "NroCatalogo",
@@ -678,15 +730,20 @@ function normalizarPerroCatalogo(perro) {
       "Catalogo",
       "numeroCatalogo",
     ]),
+
     grupo: valorCatalogo(perro, ["Grupo", "IDGrupo", "NombreGrupo", "grupo"]),
+
     raza: valorCatalogo(perro, ["Raza", "NombreRaza", "raza"]),
+
     categoria: valorCatalogo(perro, [
       "Categoria",
       "NombreCategoria",
       "IDCategoria",
       "categoria",
     ]),
+
     sexo: textoSexoCatalogos(valorCatalogo(perro, ["Sexo", "IDSexo", "sexo"])),
+
     observaciones: valorCatalogo(perro, [
       "Observaciones",
       "Observacion",
@@ -711,9 +768,9 @@ function textoSexoCatalogos(valor) {
 }
 
 function obtenerValoresUnicosCatalogos(perros, clave) {
-  return Array.from(new Set(perros.map((perro) => perro[clave]).filter(Boolean))).sort(
-    (a, b) => a.localeCompare(b, "es", { numeric: true }),
-  );
+  return Array.from(
+    new Set(perros.map((perro) => perro[clave]).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
 }
 
 function escapeHtmlCatalogos(valor) {
