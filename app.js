@@ -80,7 +80,9 @@ function crearSelectPersonalizado(select) {
     if (!estaAbierto) abrirSelectPersonalizado(custom);
   });
 
-  search.addEventListener("input", () => renderizarOpcionesPersonalizadas(select));
+  search.addEventListener("input", () =>
+    renderizarOpcionesPersonalizadas(select),
+  );
   search.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") {
       cerrarSelectsPersonalizados();
@@ -88,16 +90,21 @@ function crearSelectPersonalizado(select) {
     }
   });
 
-  select.addEventListener("change", () => sincronizarSelectPersonalizado(select.id));
+  select.addEventListener("change", () =>
+    sincronizarSelectPersonalizado(select.id),
+  );
 
   custom.addEventListener("click", (ev) => ev.stopPropagation());
 
-  new MutationObserver(() => sincronizarSelectPersonalizado(select.id)).observe(select, {
-    attributes: true,
-    attributeFilter: ["disabled"],
-    childList: true,
-    subtree: true,
-  });
+  new MutationObserver(() => sincronizarSelectPersonalizado(select.id)).observe(
+    select,
+    {
+      attributes: true,
+      attributeFilter: ["disabled"],
+      childList: true,
+      subtree: true,
+    },
+  );
 
   sincronizarSelectPersonalizado(select.id);
 }
@@ -108,7 +115,9 @@ function abrirSelectPersonalizado(custom) {
   const search = custom.querySelector(".custom-select__search");
 
   trigger.setAttribute("aria-expanded", "true");
-  renderizarOpcionesPersonalizadas(document.getElementById(custom.dataset.selectTarget));
+  renderizarOpcionesPersonalizadas(
+    document.getElementById(custom.dataset.selectTarget),
+  );
 
   if (!window.matchMedia("(pointer: coarse)").matches) {
     window.setTimeout(() => {
@@ -121,32 +130,43 @@ function abrirSelectPersonalizado(custom) {
 function cerrarSelectsPersonalizados() {
   document.querySelectorAll(".custom-select.is-open").forEach((custom) => {
     custom.classList.remove("is-open");
-    custom.querySelector(".custom-select__trigger").setAttribute("aria-expanded", "false");
+    custom
+      .querySelector(".custom-select__trigger")
+      .setAttribute("aria-expanded", "false");
     custom.querySelector(".custom-select__search").value = "";
   });
 }
 
 function sincronizarSelectPersonalizado(id) {
   const select = document.getElementById(id);
-  const custom = document.querySelector(`.custom-select[data-select-target="${id}"]`);
+  const custom = document.querySelector(
+    `.custom-select[data-select-target="${id}"]`,
+  );
   if (!select || !custom) return;
 
   const selectedOption = select.options[select.selectedIndex];
   const value = custom.querySelector(".custom-select__value");
   const trigger = custom.querySelector(".custom-select__trigger");
 
-  value.textContent = selectedOption?.textContent || (select.disabled ? "Sin opciones disponibles" : "Seleccionar");
+  value.textContent =
+    selectedOption?.textContent ||
+    (select.disabled ? "Sin opciones disponibles" : "Seleccionar");
   trigger.disabled = select.disabled;
   custom.classList.toggle("is-disabled", select.disabled);
   renderizarOpcionesPersonalizadas(select);
 }
 
 function renderizarOpcionesPersonalizadas(select) {
-  const custom = document.querySelector(`.custom-select[data-select-target="${select.id}"]`);
+  const custom = document.querySelector(
+    `.custom-select[data-select-target="${select.id}"]`,
+  );
   if (!custom) return;
 
   const contenedor = custom.querySelector(".custom-select__options");
-  const filtro = custom.querySelector(".custom-select__search").value.trim().toLowerCase();
+  const filtro = custom
+    .querySelector(".custom-select__search")
+    .value.trim()
+    .toLowerCase();
   const opciones = Array.from(select.options).filter((opt) =>
     opt.textContent.toLowerCase().includes(filtro),
   );
@@ -264,8 +284,19 @@ function cargarResultados(tipo) {
 
         fila.innerHTML = `
         <strong>${textoPuesto}</strong><br>
-        Nº ${r.NumeroCatalogo}<br>
-        ${r.Observaciones || ""}
+
+
+
+<div>
+  Nº ${r.NumeroCatalogo} - ${r.NombreRaza} - ${r.IDSexo === "S01" ? "Macho" : "Hembra"}
+</div>
+
+<div style="margin-top:4px;">
+  ${r.Observaciones || ""}
+</div>
+
+
+
       `;
 
         bloque.appendChild(fila);
@@ -402,6 +433,296 @@ function cargarResultados(tipo) {
           });
         });
     });
+}
+
+const FECHA_HABILITACION_CATALOGOS = new Date(2026, 5, 14, 9, 0, 0);
+
+let catalogosCountdownTimer = null;
+let catalogosEstadoActual = {
+  grupo: "",
+  raza: "",
+};
+
+function cargarCatalogosPerrosInscriptos() {
+  const cont = document.getElementById("contenedorResultados");
+  const info = document.getElementById("infoGeneral");
+
+  if (!cont || !info) return;
+
+  detenerCountdownCatalogos();
+  info.innerHTML = "";
+  cont.innerHTML = "";
+
+  if (new Date() < FECHA_HABILITACION_CATALOGOS) {
+    renderCatalogosBloqueados();
+    return;
+  }
+
+  renderCatalogosPerrosInscriptos();
+}
+
+function renderCatalogosBloqueados() {
+  const cont = document.getElementById("contenedorResultados");
+  if (!cont) return;
+
+  cont.innerHTML = `
+    <section class="catalogos-espera" aria-live="polite">
+      <h2>📖 CATÁLOGOS DE PERROS INSCRIPTOS</h2>
+      <p>Los catálogos estarán disponibles a partir de las</p>
+      <strong>09:00 hs del domingo 14 de junio de 2026</strong>
+      <div class="catalogos-espera__label">Tiempo restante</div>
+      <div class="catalogos-countdown">
+        <div>
+          <span id="catalogosDias">00</span>
+          <small>días</small>
+        </div>
+        <div>
+          <span id="catalogosHoras">00</span>
+          <small>horas</small>
+        </div>
+        <div>
+          <span id="catalogosMinutos">00</span>
+          <small>minutos</small>
+        </div>
+        <div>
+          <span id="catalogosSegundos">00</span>
+          <small>segundos</small>
+        </div>
+      </div>
+    </section>
+  `;
+
+  actualizarCountdownCatalogos();
+  catalogosCountdownTimer = window.setInterval(actualizarCountdownCatalogos, 1000);
+}
+
+function actualizarCountdownCatalogos() {
+  const ahora = new Date();
+  const restante = FECHA_HABILITACION_CATALOGOS.getTime() - ahora.getTime();
+
+  if (restante <= 0) {
+    detenerCountdownCatalogos();
+    renderCatalogosPerrosInscriptos();
+    return;
+  }
+
+  const totalSegundos = Math.floor(restante / 1000);
+  const dias = Math.floor(totalSegundos / 86400);
+  const horas = Math.floor((totalSegundos % 86400) / 3600);
+  const minutos = Math.floor((totalSegundos % 3600) / 60);
+  const segundos = totalSegundos % 60;
+
+  setTextoCatalogos("catalogosDias", dias);
+  setTextoCatalogos("catalogosHoras", horas);
+  setTextoCatalogos("catalogosMinutos", minutos);
+  setTextoCatalogos("catalogosSegundos", segundos);
+}
+
+function setTextoCatalogos(id, valor) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(valor).padStart(2, "0");
+}
+
+function detenerCountdownCatalogos() {
+  if (!catalogosCountdownTimer) return;
+  window.clearInterval(catalogosCountdownTimer);
+  catalogosCountdownTimer = null;
+}
+
+function renderCatalogosPerrosInscriptos() {
+  const cont = document.getElementById("contenedorResultados");
+  const info = document.getElementById("infoGeneral");
+
+  if (!cont || !info) return;
+
+  const perros = obtenerDatosCatalogosPerros();
+
+  info.innerHTML = `
+    <h2>📖 CATÁLOGOS DE PERROS INSCRIPTOS</h2>
+    <h3>${perros.length ? `${perros.length} perros inscriptos` : ""}</h3>
+  `;
+
+  if (!perros.length) {
+    cont.innerHTML = `
+      <section class="catalogos-vacio">
+        <h3>Catálogo no disponible</h3>
+        <p>
+          El endpoint público todavía no devuelve la información necesaria para
+          mostrar el catálogo de perros inscriptos.
+        </p>
+      </section>
+    `;
+    return;
+  }
+
+  const grupos = obtenerValoresUnicosCatalogos(perros, "grupo");
+  const razas = obtenerValoresUnicosCatalogos(perros, "raza");
+
+  cont.innerHTML = `
+    <section class="catalogos-panel">
+      <div class="catalogos-filtros">
+        <label>
+          Todos los grupos
+          <select id="catalogosFiltroGrupo">
+            <option value="">Todos los grupos</option>
+            ${grupos
+              .map((grupo) => `<option value="${escapeHtmlCatalogos(grupo)}">${escapeHtmlCatalogos(grupo)}</option>`)
+              .join("")}
+          </select>
+        </label>
+        <label>
+          Todas las razas
+          <select id="catalogosFiltroRaza">
+            <option value="">Todas las razas</option>
+            ${razas
+              .map((raza) => `<option value="${escapeHtmlCatalogos(raza)}">${escapeHtmlCatalogos(raza)}</option>`)
+              .join("")}
+          </select>
+        </label>
+      </div>
+      <div id="catalogosListado"></div>
+    </section>
+  `;
+
+  document
+    .getElementById("catalogosFiltroGrupo")
+    ?.addEventListener("change", (ev) => {
+      catalogosEstadoActual.grupo = ev.target.value;
+      renderCatalogosListado(perros);
+    });
+
+  document
+    .getElementById("catalogosFiltroRaza")
+    ?.addEventListener("change", (ev) => {
+      catalogosEstadoActual.raza = ev.target.value;
+      renderCatalogosListado(perros);
+    });
+
+  renderCatalogosListado(perros);
+}
+
+function renderCatalogosListado(perros) {
+  const listado = document.getElementById("catalogosListado");
+  if (!listado) return;
+
+  const filtrados = perros.filter((perro) => {
+    const coincideGrupo =
+      !catalogosEstadoActual.grupo || perro.grupo === catalogosEstadoActual.grupo;
+    const coincideRaza =
+      !catalogosEstadoActual.raza || perro.raza === catalogosEstadoActual.raza;
+    return coincideGrupo && coincideRaza;
+  });
+
+  if (!filtrados.length) {
+    listado.innerHTML = `<p class="catalogos-sin-resultados">No hay perros para los filtros seleccionados.</p>`;
+    return;
+  }
+
+  listado.innerHTML = `
+    <div class="catalogos-tabla">
+      <div class="catalogos-tabla__head">
+        <span>N° Catálogo</span>
+        <span>Grupo</span>
+        <span>Raza</span>
+        <span>Categoría</span>
+        <span>Sexo</span>
+        <span>Observaciones</span>
+      </div>
+      ${filtrados
+        .map(
+          (perro) => `
+            <article class="catalogos-tabla__row">
+              <div data-label="N° Catálogo">${escapeHtmlCatalogos(perro.numero)}</div>
+              <div data-label="Grupo">${escapeHtmlCatalogos(perro.grupo)}</div>
+              <div data-label="Raza">${escapeHtmlCatalogos(perro.raza)}</div>
+              <div data-label="Categoría">${escapeHtmlCatalogos(perro.categoria)}</div>
+              <div data-label="Sexo">${escapeHtmlCatalogos(perro.sexo)}</div>
+              <div data-label="Observaciones">${escapeHtmlCatalogos(perro.observaciones)}</div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function obtenerDatosCatalogosPerros() {
+  if (!DATA_GLOBAL) return [];
+
+  // El endpoint publico debe devolver una lista de perros inscriptos con:
+  // NumeroCatalogo, Grupo/IDGrupo, NombreRaza, Categoria/IDCategoria, Sexo/IDSexo y Observaciones.
+  const origen =
+    DATA_GLOBAL.Catalogo_Perros_Inscriptos ||
+    DATA_GLOBAL.catalogoPerrosInscriptos ||
+    DATA_GLOBAL.catalogosPerrosInscriptos ||
+    DATA_GLOBAL.perrosInscriptos ||
+    DATA_GLOBAL.catalogo ||
+    DATA_GLOBAL.perros ||
+    [];
+
+  if (!Array.isArray(origen)) {
+    return [];
+  }
+
+  return origen
+    .map(normalizarPerroCatalogo)
+    .filter((perro) => perro.numero || perro.grupo || perro.raza);
+}
+
+function normalizarPerroCatalogo(perro) {
+  return {
+    numero: valorCatalogo(perro, [
+      "NumeroCatalogo",
+      "NroCatalogo",
+      "Numero",
+      "Catalogo",
+      "numeroCatalogo",
+    ]),
+    grupo: valorCatalogo(perro, ["Grupo", "IDGrupo", "NombreGrupo", "grupo"]),
+    raza: valorCatalogo(perro, ["Raza", "NombreRaza", "raza"]),
+    categoria: valorCatalogo(perro, [
+      "Categoria",
+      "NombreCategoria",
+      "IDCategoria",
+      "categoria",
+    ]),
+    sexo: textoSexoCatalogos(valorCatalogo(perro, ["Sexo", "IDSexo", "sexo"])),
+    observaciones: valorCatalogo(perro, [
+      "Observaciones",
+      "Observacion",
+      "observaciones",
+    ]),
+  };
+}
+
+function valorCatalogo(obj, claves) {
+  for (const clave of claves) {
+    if (obj && obj[clave] !== undefined && obj[clave] !== null) {
+      return String(obj[clave]).trim();
+    }
+  }
+  return "";
+}
+
+function textoSexoCatalogos(valor) {
+  if (valor === "S01") return "Macho";
+  if (valor === "S02") return "Hembra";
+  return valor || "";
+}
+
+function obtenerValoresUnicosCatalogos(perros, clave) {
+  return Array.from(new Set(perros.map((perro) => perro[clave]).filter(Boolean))).sort(
+    (a, b) => a.localeCompare(b, "es", { numeric: true }),
+  );
+}
+
+function escapeHtmlCatalogos(valor) {
+  return String(valor || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
