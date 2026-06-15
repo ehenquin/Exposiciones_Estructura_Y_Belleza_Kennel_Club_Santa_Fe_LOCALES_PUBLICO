@@ -242,19 +242,30 @@ function cargarResultados(tipo) {
       "BIS Cachorros": [],
       "BIS Jóvenes": [],
       "BIS Adultos": [],
+      "BIS Campeones": [],
     };
 
     resultadosBis.forEach((r) => {
-      const cat = String(r.IDCategoria || "");
+      switch (String(r.TipoBIS || "").trim()) {
+        case "BIS CACHORROS ESPECIALES":
+          gruposBis["BIS Cachorros Especiales"].push(r);
+          break;
 
-      if (cat === "C00") {
-        gruposBis["BIS Cachorros Especiales"].push(r);
-      } else if (cat === "C01") {
-        gruposBis["BIS Cachorros"].push(r);
-      } else if (cat === "C02" || cat === "C03") {
-        gruposBis["BIS Jóvenes"].push(r);
-      } else {
-        gruposBis["BIS Adultos"].push(r);
+        case "BIS CACHORROS":
+          gruposBis["BIS Cachorros"].push(r);
+          break;
+
+        case "BIS JOVENES":
+          gruposBis["BIS Jóvenes"].push(r);
+          break;
+
+        case "BIS ADULTOS":
+          gruposBis["BIS Adultos"].push(r);
+          break;
+
+        case "BIS CAMPEONES":
+          gruposBis["BIS Campeones"].push(r);
+          break;
       }
     });
 
