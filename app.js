@@ -245,7 +245,20 @@ function cargarResultados(tipo) {
       "BIS Campeones": [],
     };
 
+    const resultadosBisLimpios = new Map();
+
     resultadosBis.forEach((r) => {
+      const puesto = Number(r.PuestoBIS);
+      const puestoValido =
+        Number.isInteger(puesto) && puesto >= 1 && puesto <= 7;
+      const clave = `${r.IDInscripcion}|${String(r.TipoBIS || "").trim()}`;
+
+      if (puestoValido && !resultadosBisLimpios.has(clave)) {
+        resultadosBisLimpios.set(clave, r);
+      }
+    });
+
+    resultadosBisLimpios.forEach((r) => {
       switch (String(r.TipoBIS || "").trim()) {
         case "BIS CACHORROS ESPECIALES":
           gruposBis["BIS Cachorros Especiales"].push(r);
@@ -282,6 +295,8 @@ function cargarResultados(tipo) {
       bloque.innerHTML = `<h2>${titulo}</h2>`;
 
       lista.forEach((r) => {
+        if (!r.PuestoBIS || Number(r.PuestoBIS) <= 0) return;
+
         const puesto = Number(r.PuestoBIS);
 
         let textoPuesto = `${puesto}° DE EXPOSICIÓN`;
